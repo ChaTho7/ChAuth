@@ -1,5 +1,6 @@
 package com.chatho.chauth.view
 
+import android.animation.TimeInterpolator
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -24,14 +25,17 @@ import com.chatho.chauth.service.HandleOneSignal
 import com.chatho.chauth.service.IHandleOneSignal
 import com.chatho.chauth.util.findConstantFieldName
 import com.mapbox.geojson.Point
+import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.ResourceOptionsManager
 import com.mapbox.maps.Style
 import com.mapbox.maps.dsl.cameraOptions
 import com.mapbox.maps.plugin.animation.MapAnimationOptions.Companion.mapAnimationOptions
+import com.mapbox.maps.plugin.animation.camera
+import com.mapbox.maps.plugin.animation.easeTo
 import com.mapbox.maps.plugin.animation.flyTo
+import com.mapbox.maps.plugin.delegates.listeners.OnCameraChangeListener
 import com.mapbox.maps.plugin.gestures.gestures
 import javax.crypto.Cipher
-
 
 class MainActivity : AppCompatActivity(), IHandleBiometric, IHandleOneSignal {
     private lateinit var binding: ActivityMainBinding
@@ -44,7 +48,7 @@ class MainActivity : AppCompatActivity(), IHandleBiometric, IHandleOneSignal {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        ResourceOptionsManager.getDefault(this,BuildConfig.MAPBOX_ACCESS_TOKEN)
+        ResourceOptionsManager.getDefault(this, BuildConfig.MAPBOX_ACCESS_TOKEN)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -76,7 +80,7 @@ class MainActivity : AppCompatActivity(), IHandleBiometric, IHandleOneSignal {
 
     private fun handleMap() {
         binding.mapView.getMapboxMap().loadStyleUri(Style.OUTDOORS) {
-            binding.mapView.gestures.scrollEnabled = false
+            handleMapGestures()
 
             handleAPI.handleIPLocation(oneSignal.clientIpAddress!!) { response, success ->
                 if (success) {
@@ -84,24 +88,32 @@ class MainActivity : AppCompatActivity(), IHandleBiometric, IHandleOneSignal {
                         center(Point.fromLngLat(response!!.lon, response.lat))
                         zoom(7.0)
                     }
-                    binding.mapView.getMapboxMap().flyTo(
-                        cameraOptions,
-                        mapAnimationOptions {
-                            startDelay(500)
-                            duration(3_000)
-                        }
-                    )
 
-                    handlePopUp(response!!)
+                    handlePopUp(response!!, cameraOptions)
                 } else {
-                    handlePopUp(null)
+                    handlePopUp(null, null)
                 }
             }
         }
     }
 
+    private fun handleMapGestures() {
+        binding.mapView.gestures.scrollDecelerationEnabled = false
+        binding.mapView.gestures.scrollEnabled = false
+        binding.mapView.gestures.pinchScrollEnabled = false
+        binding.mapView.gestures.doubleTouchToZoomOutEnabled = false
+        binding.mapView.gestures.doubleTapToZoomInEnabled = false
+        binding.mapView.gestures.quickZoomEnabled = false
+        binding.mapView.gestures.pinchToZoomEnabled = false
+        binding.mapView.gestures.pitchEnabled = false
+        binding.mapView.gestures.simultaneousRotateAndPinchToZoomEnabled = false
+        binding.mapView.gestures.pinchToZoomDecelerationEnabled = false
+        binding.mapView.gestures.rotateDecelerationEnabled = false
+        binding.mapView.gestures.rotateEnabled = false
+    }
+
     private fun handlePopUp(
-        response: IPLocationResponse?
+        response: IPLocationResponse?, cameraOptions: CameraOptions?
     ) {
         binding.ipAddressText.text =
             "(${oneSignal.clientIpAddress})".takeIf { oneSignal.clientIpAddress != null }
@@ -115,7 +127,7 @@ class MainActivity : AppCompatActivity(), IHandleBiometric, IHandleOneSignal {
             binding.ipGeoLocationText.text = "(Unknown Geo Location)"
         }
 
-        handleAnimations()
+        handleAnimations(cameraOptions)
 
         binding.allowActionButton.setOnClickListener {
             binding.popupView.startAnimation(popIn)
@@ -128,15 +140,22 @@ class MainActivity : AppCompatActivity(), IHandleBiometric, IHandleOneSignal {
             biometricSetup()
         }
 
+        binding.popupView.visibility =
+            View.INVISIBLE // Add this to temporarily fix the 'popupView.startAnimation' work properly when the app comes from 'killed' status
+        // Somehow, 'popupView.startAnimation' doesn't start the animation if 'popupView.visibility' is 'GONE' and app came from 'killed' status.
         binding.popupView.startAnimation(popOut)
     }
 
-    private fun handleAnimations() {
+    private fun handleAnimations(cameraOptions: CameraOptions?) {
         popOut = AnimationUtils.loadAnimation(this, R.anim.appear)
         popOut.setAnimationListener(object : Animation.AnimationListener {
             override fun onAnimationStart(p0: Animation?) {
                 binding.popupView.visibility = View.VISIBLE
                 binding.enableQrScanButton.isEnabled = false
+
+                binding.mapView.getMapboxMap().flyTo(cameraOptions!!, mapAnimationOptions {
+                    duration(3_000)
+                })
             }
 
             override fun onAnimationEnd(p0: Animation?) {}
@@ -153,7 +172,7 @@ class MainActivity : AppCompatActivity(), IHandleBiometric, IHandleOneSignal {
                 binding.ipAddressText.text = ""
                 binding.enableQrScanButton.isEnabled = true
                 binding.mapView.getMapboxMap().setCamera(cameraOptions {
-                    center(Point.fromLngLat(35.5, 39.0))
+                    center(Point.fromLngLat(35.2, 38.9))
                     zoom(3.0)
                 })
             }
@@ -186,8 +205,7 @@ class MainActivity : AppCompatActivity(), IHandleBiometric, IHandleOneSignal {
     override fun biometricOnSucceededCallback(result: BiometricPrompt.AuthenticationResult) {
         Log.d("MainActivity", "Authentication is successful")
         val authType = findConstantFieldName(
-            BiometricPrompt::class.java,
-            "AUTHENTICATION_RESULT_TYPE_", result.authenticationType
+            BiometricPrompt::class.java, "AUTHENTICATION_RESULT_TYPE_", result.authenticationType
         )
         Log.d("MainActivity", "Authentication type: $authType")
         handleAPI.handleNotify("test@test2.com", oneSignal.isAllowed!!) {
@@ -198,18 +216,14 @@ class MainActivity : AppCompatActivity(), IHandleBiometric, IHandleOneSignal {
 
     override fun biometricOnErrorCallback(errorCode: Int, errString: CharSequence) {
         Log.d("MainActivity", "$errorCode :: $errString")
-        handleAPI.handleNotify("test@test2.com", oneSignal.isAllowed!!) {
-            oneSignal.isAllowed = null
-            oneSignal.clientIpAddress = null
-        }
+        oneSignal.isAllowed = null
+        oneSignal.clientIpAddress = null
     }
 
     override fun biometricOnFailedCallback() {
         Log.d("MainActivity", "Authentication failed for an unknown reason")
-        handleAPI.handleNotify("test@test2.com", oneSignal.isAllowed!!) {
-            oneSignal.isAllowed = null
-            oneSignal.clientIpAddress = null
-        }
+        oneSignal.isAllowed = null
+        oneSignal.clientIpAddress = null
     }
 
     override fun handleOneSignalCallback() {
@@ -217,7 +231,7 @@ class MainActivity : AppCompatActivity(), IHandleBiometric, IHandleOneSignal {
             if (oneSignal.clientIpAddress != null) {
                 handleMap()
             } else {
-                handlePopUp(null)
+                handlePopUp(null, null)
             }
         } else {
             biometricSetup()

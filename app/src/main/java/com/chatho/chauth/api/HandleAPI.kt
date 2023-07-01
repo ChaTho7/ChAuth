@@ -17,19 +17,16 @@ class HandleAPI(private val activity: ComponentActivity) {
     companion object {
         private const val domain = "http://192.168.1.7:5000"
         private const val ipFetchDomain = "http://ip-api.com"
-        private val retrofit = Retrofit.Builder()
-            .baseUrl(domain)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
+        private val retrofit =
+            Retrofit.Builder().baseUrl(domain).addConverterFactory(GsonConverterFactory.create())
+                .build()
 
         private val service = retrofit.create(APIService::class.java)
     }
 
     fun handleIPLocation(ipAddress: String, callback: (IPLocationResponse?, Boolean) -> Unit) {
-        val retrofit = Retrofit.Builder()
-            .baseUrl(ipFetchDomain)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
+        val retrofit = Retrofit.Builder().baseUrl(ipFetchDomain)
+            .addConverterFactory(GsonConverterFactory.create()).build()
 
         val service = retrofit.create(APIService::class.java)
 
@@ -41,8 +38,7 @@ class HandleAPI(private val activity: ComponentActivity) {
 
                 request.enqueue(object : Callback<ResponseBody> {
                     override fun onResponse(
-                        call: Call<ResponseBody>,
-                        response: retrofit2.Response<ResponseBody>
+                        call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>
                     ) {
                         val responseBody = response.body()
                         val responseBodyString = responseBody?.string()
@@ -52,7 +48,7 @@ class HandleAPI(private val activity: ComponentActivity) {
                         if (response.isSuccessful) {
                             callback(jsonResponse, true)
                         } else {
-                            callback(jsonResponse, false)
+                            callback(null, false)
                         }
                     }
 
@@ -61,9 +57,7 @@ class HandleAPI(private val activity: ComponentActivity) {
 
                         activity.runOnUiThread {
                             Toast.makeText(
-                                activity,
-                                "Error: ${t.message}",
-                                Toast.LENGTH_LONG
+                                activity, "Error: ${t.message}", Toast.LENGTH_LONG
                             ).show()
                         }
                     }
@@ -73,9 +67,7 @@ class HandleAPI(private val activity: ComponentActivity) {
 
                 activity.runOnUiThread {
                     Toast.makeText(
-                        activity,
-                        "Fetching IP location failed: ${e.message}",
-                        Toast.LENGTH_LONG
+                        activity, "Fetching IP location failed: ${e.message}", Toast.LENGTH_LONG
                     ).show()
                 }
             }
@@ -93,8 +85,7 @@ class HandleAPI(private val activity: ComponentActivity) {
 
                 request.enqueue(object : Callback<ResponseBody> {
                     override fun onResponse(
-                        call: Call<ResponseBody>,
-                        response: retrofit2.Response<ResponseBody>
+                        call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>
                     ) {
                         if (response.isSuccessful) {
                             val responseBody = response.body()
@@ -128,9 +119,7 @@ class HandleAPI(private val activity: ComponentActivity) {
                     override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                         activity.runOnUiThread {
                             Toast.makeText(
-                                activity,
-                                "Error: ${t.message}",
-                                Toast.LENGTH_LONG
+                                activity, "Error: ${t.message}", Toast.LENGTH_LONG
                             ).show()
                         }
                     }
@@ -138,9 +127,7 @@ class HandleAPI(private val activity: ComponentActivity) {
             } catch (e: Exception) {
                 activity.runOnUiThread {
                     Toast.makeText(
-                        activity,
-                        "Auth failed: ${e.message}",
-                        Toast.LENGTH_LONG
+                        activity, "Auth failed: ${e.message}", Toast.LENGTH_LONG
                     ).show()
                 }
             }
@@ -157,8 +144,7 @@ class HandleAPI(private val activity: ComponentActivity) {
 
                 request.enqueue(object : Callback<ResponseBody> {
                     override fun onResponse(
-                        call: Call<ResponseBody>,
-                        response: retrofit2.Response<ResponseBody>
+                        call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>
                     ) {
                         if (response.isSuccessful) {
                             val responseBody = response.body()
@@ -192,9 +178,7 @@ class HandleAPI(private val activity: ComponentActivity) {
                     override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                         activity.runOnUiThread {
                             Toast.makeText(
-                                activity,
-                                "Error: ${t.message}",
-                                Toast.LENGTH_LONG
+                                activity, "Error: ${t.message}", Toast.LENGTH_LONG
                             ).show()
                         }
                     }
@@ -202,9 +186,7 @@ class HandleAPI(private val activity: ComponentActivity) {
             } catch (e: Exception) {
                 activity.runOnUiThread {
                     Toast.makeText(
-                        activity,
-                        "Auth failed: ${e.message}",
-                        Toast.LENGTH_LONG
+                        activity, "Auth failed: ${e.message}", Toast.LENGTH_LONG
                     ).show()
                 }
             }

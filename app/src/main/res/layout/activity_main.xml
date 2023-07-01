@@ -24,96 +24,6 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.5" />
 
-    <!--    <androidx.constraintlayout.widget.ConstraintLayout-->
-    <!--        android:id="@+id/popup_view"-->
-    <!--        android:layout_width="0dp"-->
-    <!--        android:layout_height="0dp"-->
-    <!--        android:layout_marginStart="40dp"-->
-    <!--        android:layout_marginTop="275dp"-->
-    <!--        android:layout_marginEnd="40dp"-->
-    <!--        android:layout_marginBottom="275dp"-->
-    <!--        android:background="@drawable/black_bg"-->
-    <!--        android:elevation="2dp"-->
-    <!--        android:visibility="gone"-->
-    <!--        app:layout_constraintBottom_toBottomOf="parent"-->
-    <!--        app:layout_constraintEnd_toEndOf="parent"-->
-    <!--        app:layout_constraintHorizontal_bias="0.5"-->
-    <!--        app:layout_constraintStart_toStartOf="parent"-->
-    <!--        app:layout_constraintTop_toTopOf="parent">-->
-
-    <!--        <TextView-->
-    <!--            android:id="@+id/textView"-->
-    <!--            android:layout_width="wrap_content"-->
-    <!--            android:layout_height="wrap_content"-->
-    <!--            android:elevation="3dp"-->
-    <!--            android:text="A NEW REQUEST TO ACCESS CHATEST"-->
-    <!--            android:textSize="20sp"-->
-    <!--            app:layout_constraintBottom_toTopOf="@+id/allow_action_button"-->
-    <!--            app:layout_constraintEnd_toEndOf="parent"-->
-    <!--            app:layout_constraintStart_toStartOf="parent"-->
-    <!--            app:layout_constraintTop_toTopOf="parent"-->
-    <!--            app:layout_constraintVertical_bias="0.35" />-->
-
-    <!--        <TextView-->
-    <!--            android:id="@+id/ip_address_text"-->
-    <!--            android:layout_width="wrap_content"-->
-    <!--            android:layout_height="wrap_content"-->
-    <!--            android:elevation="3dp"-->
-    <!--            android:textSize="12sp"-->
-    <!--            app:layout_constraintEnd_toEndOf="parent"-->
-    <!--            app:layout_constraintHorizontal_bias="0.5"-->
-    <!--            app:layout_constraintStart_toStartOf="parent"-->
-    <!--            app:layout_constraintTop_toBottomOf="@+id/textView" />-->
-
-    <!--        &lt;!&ndash;        <androidx.cardview.widget.CardView&ndash;&gt;-->
-    <!--        &lt;!&ndash;            android:layout_width="match_parent"&ndash;&gt;-->
-    <!--        &lt;!&ndash;            android:layout_height="match_parent"&ndash;&gt;-->
-    <!--        &lt;!&ndash;            app:cardBackgroundColor="@android:color/transparent"&ndash;&gt;-->
-    <!--        &lt;!&ndash;            app:cardCornerRadius="50dp"&ndash;&gt;-->
-    <!--        &lt;!&ndash;            app:contentPadding="-10dp"&ndash;&gt;-->
-    <!--        &lt;!&ndash;            app:layout_constraintBottom_toBottomOf="parent"&ndash;&gt;-->
-    <!--        &lt;!&ndash;            app:layout_constraintEnd_toEndOf="parent"&ndash;&gt;-->
-    <!--        &lt;!&ndash;            app:layout_constraintStart_toStartOf="parent"&ndash;&gt;-->
-    <!--        &lt;!&ndash;            app:layout_constraintTop_toTopOf="parent">&ndash;&gt;-->
-
-    <!--        &lt;!&ndash;            <ImageView&ndash;&gt;-->
-    <!--        &lt;!&ndash;                android:id="@+id/imageView3"&ndash;&gt;-->
-    <!--        &lt;!&ndash;                android:layout_width="match_parent"&ndash;&gt;-->
-    <!--        &lt;!&ndash;                android:layout_height="match_parent"&ndash;&gt;-->
-    <!--        &lt;!&ndash;                app:srcCompat="@drawable/black_bg" />&ndash;&gt;-->
-    <!--        &lt;!&ndash;        </androidx.cardview.widget.CardView>&ndash;&gt;-->
-
-    <!--        <Button-->
-    <!--            android:id="@+id/allow_action_button"-->
-    <!--            android:layout_width="wrap_content"-->
-    <!--            android:layout_height="wrap_content"-->
-    <!--            android:layout_marginStart="32dp"-->
-    <!--            android:layout_marginBottom="16dp"-->
-    <!--            android:backgroundTint="@color/cyan"-->
-    <!--            android:elevation="3dp"-->
-    <!--            android:text="ALLOW"-->
-    <!--            android:textColor="@color/black"-->
-    <!--            app:cornerRadius="10dp"-->
-    <!--            app:layout_constraintBottom_toBottomOf="parent"-->
-    <!--            app:layout_constraintStart_toStartOf="parent" />-->
-
-    <!--        <Button-->
-    <!--            android:id="@+id/deny_action_button"-->
-    <!--            android:layout_width="wrap_content"-->
-    <!--            android:layout_height="wrap_content"-->
-    <!--            android:layout_marginEnd="32dp"-->
-    <!--            android:layout_marginBottom="16dp"-->
-    <!--            android:backgroundTint="@color/red"-->
-    <!--            android:elevation="3dp"-->
-    <!--            android:text="DENY"-->
-    <!--            android:textColor="@color/black"-->
-    <!--            android:textSize="14sp"-->
-    <!--            app:cornerRadius="10dp"-->
-    <!--            app:layout_constraintBottom_toBottomOf="parent"-->
-    <!--            app:layout_constraintEnd_toEndOf="parent" />-->
-
-    <!--    </androidx.constraintlayout.widget.ConstraintLayout>-->
-
     <androidx.cardview.widget.CardView
         android:id="@+id/popup_view"
         android:layout_width="0dp"
@@ -234,8 +144,8 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/ip_geo_location_text"
                 app:layout_constraintVertical_bias="0.5"
-                app:mapbox_cameraTargetLat="39.0"
-                app:mapbox_cameraTargetLng="35.5"
+                app:mapbox_cameraTargetLat="38.9"
+                app:mapbox_cameraTargetLng="35.2"
                 app:mapbox_cameraZoom="3.0" />
 
             <Button
