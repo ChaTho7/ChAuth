@@ -22,7 +22,7 @@ class HandlePermission(private val activity: ComponentActivity) {
 
     fun allRuntimePermissionsGranted(): Boolean {
         for (permission in REQUIRED_RUNTIME_PERMISSIONS) {
-            permission?.let {
+            permission.let {
                 if (!isPermissionGranted(activity, it)) {
                     return false
                 }
@@ -34,7 +34,7 @@ class HandlePermission(private val activity: ComponentActivity) {
     fun getRuntimePermissions() {
         val permissionsToRequest = ArrayList<String>()
         for (permission in REQUIRED_RUNTIME_PERMISSIONS) {
-            permission?.let {
+            permission.let {
                 if (!isPermissionGranted(activity, it)) {
                     permissionsToRequest.add(permission)
                 }

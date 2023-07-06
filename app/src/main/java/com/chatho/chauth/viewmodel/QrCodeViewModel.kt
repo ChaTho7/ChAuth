@@ -34,7 +34,7 @@ class QrCodeViewModel(private val activity: ComponentActivity, barcode: Barcode)
     var boundingRect: Rect = barcode.boundingBox!!
     var qrContent: String = ""
     var qrType = findConstantFieldName(Barcode::class.java, "TYPE_", barcode.valueType)
-    var qrCodeTouchCallback = { v: View, e: MotionEvent -> false }
+    var qrCodeTouchCallback = { _: View, _: MotionEvent -> false }
 
     init {
         when (barcode.valueType) {
@@ -42,7 +42,7 @@ class QrCodeViewModel(private val activity: ComponentActivity, barcode: Barcode)
                 qrContent = barcode.url!!.url!!
                 qrCodeTouchCallback = { v: View, e: MotionEvent ->
                     if (e.action == MotionEvent.ACTION_DOWN && boundingRect.contains(
-                            e.getX().toInt(), e.getY().toInt()
+                            e.x.toInt(), e.y.toInt()
                         )
                     ) {
                         val openBrowserIntent = Intent(Intent.ACTION_VIEW)
@@ -55,9 +55,9 @@ class QrCodeViewModel(private val activity: ComponentActivity, barcode: Barcode)
 
             Barcode.TYPE_TEXT -> {
                 qrContent = barcode.rawValue.toString()
-                qrCodeTouchCallback = { v: View, e: MotionEvent ->
+                qrCodeTouchCallback = { _: View, e: MotionEvent ->
                     if (e.action == MotionEvent.ACTION_DOWN && boundingRect.contains(
-                            e.getX().toInt(), e.getY().toInt()
+                            e.x.toInt(), e.y.toInt()
                         )
                     ) {
                         val intent = Intent(activity, MainActivity::class.java)

@@ -2,14 +2,15 @@ package com.chatho.chauth.service
 
 import androidx.activity.ComponentActivity
 import com.chatho.chauth.BuildConfig
+import com.chatho.chauth.api.HandleAPI
+import com.chatho.chauth.holder.OneSignalHolder
 import com.onesignal.OneSignal
 
 class HandleOneSignal(
     private val activity: ComponentActivity,
     private val handleOneSignalCallback: () -> Unit,
 ) {
-    var isAllowed : Boolean? = null
-    var clientIpAddress : String? = null
+    private val handleAPI = HandleAPI(activity)
 
     companion object {
         const val ONESIGNAL_APP_ID = BuildConfig.ONESIGNAL_APP_ID
@@ -24,16 +25,23 @@ class HandleOneSignal(
         OneSignal.setExternalUserId(EXTERNAL_USER_ID)
 
         OneSignal.setNotificationOpenedHandler {
-            clientIpAddress = it.notification.additionalData.get("ip_address") as String?
+            OneSignalHolder.clientIpAddress =
+                it.notification.additionalData.get("ip_address") as String?
+            OneSignalHolder.backendBuildType =
+                it.notification.additionalData.get("build_type") as String?
+
             when (it.action.actionId) {
                 "auth_allow" -> {
-                    isAllowed = true
+                    OneSignalHolder.isAllowed = true
                     handleOneSignalCallback()
                 }
 
                 "auth_deny" -> {
-                    isAllowed = false
-                    handleOneSignalCallback()
+                    OneSignalHolder.isAllowed = false
+                    handleAPI.handleNotify("test@test2.com", false) {
+                        OneSignalHolder.isAllowed = null
+                        OneSignalHolder.clientIpAddress = null
+                    }
                 }
 
                 else -> handleOneSignalCallback()

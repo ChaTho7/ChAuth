@@ -20,10 +20,8 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
--keep,allowoptimization,allowobfuscation class com.chatho.chauth.** { *; }
--keepclassmembers class com.chatho.chauth.** { *; }
--keepclasseswithmembers class com.chatho.chauth.** { *; }
+-keep,allowoptimization,allowobfuscation class com.chatho.chauth.api.** { *; }
+-keepclasseswithmembers class com.chatho.chauth.api.** { *; }
 
 -keep,allowoptimization,allowobfuscation class com.google.mlkit.vision.barcode.** { *; }
--keepclassmembers class com.google.mlkit.vision.barcode.** { *; }
 -keepclasseswithmembers class com.google.mlkit.vision.barcode.** { *; }

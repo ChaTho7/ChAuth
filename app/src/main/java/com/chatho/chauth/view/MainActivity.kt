@@ -1,6 +1,5 @@
 package com.chatho.chauth.view
 
-import android.animation.TimeInterpolator
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -21,6 +20,7 @@ import com.chatho.chauth.handler.HandleBiometric
 import com.chatho.chauth.handler.HandleEncoding
 import com.chatho.chauth.handler.HandlePermission
 import com.chatho.chauth.handler.IHandleBiometric
+import com.chatho.chauth.holder.OneSignalHolder
 import com.chatho.chauth.service.HandleOneSignal
 import com.chatho.chauth.service.IHandleOneSignal
 import com.chatho.chauth.util.findConstantFieldName
@@ -30,11 +30,9 @@ import com.mapbox.maps.ResourceOptionsManager
 import com.mapbox.maps.Style
 import com.mapbox.maps.dsl.cameraOptions
 import com.mapbox.maps.plugin.animation.MapAnimationOptions.Companion.mapAnimationOptions
-import com.mapbox.maps.plugin.animation.camera
-import com.mapbox.maps.plugin.animation.easeTo
 import com.mapbox.maps.plugin.animation.flyTo
-import com.mapbox.maps.plugin.delegates.listeners.OnCameraChangeListener
 import com.mapbox.maps.plugin.gestures.gestures
+import org.json.JSONObject
 import javax.crypto.Cipher
 
 class MainActivity : AppCompatActivity(), IHandleBiometric, IHandleOneSignal {
@@ -71,8 +69,10 @@ class MainActivity : AppCompatActivity(), IHandleBiometric, IHandleOneSignal {
             if (!qrContent.isNullOrBlank()) {
                 val handleAPI = HandleAPI(this)
 
-                HandleEncoding.encodeQRCode(qrContent).let { encodedContent ->
-                    handleAPI.handleQR("test@admin.com", encodedContent)
+                val qrCode = JSONObject(qrContent).get("code") as String
+                val buildType = JSONObject(qrContent).get("build_type") as String
+                HandleEncoding.encodeQRCode(qrCode).let { encodedContent ->
+                    handleAPI.handleQR("test@admin.com", encodedContent, buildType)
                 }
             }
         }
@@ -82,7 +82,7 @@ class MainActivity : AppCompatActivity(), IHandleBiometric, IHandleOneSignal {
         binding.mapView.getMapboxMap().loadStyleUri(Style.OUTDOORS) {
             handleMapGestures()
 
-            handleAPI.handleIPLocation(oneSignal.clientIpAddress!!) { response, success ->
+            handleAPI.handleIPLocation(OneSignalHolder.clientIpAddress!!) { response, success ->
                 if (success) {
                     val cameraOptions = cameraOptions {
                         center(Point.fromLngLat(response!!.lon, response.lat))
@@ -116,28 +116,31 @@ class MainActivity : AppCompatActivity(), IHandleBiometric, IHandleOneSignal {
         response: IPLocationResponse?, cameraOptions: CameraOptions?
     ) {
         binding.ipAddressText.text =
-            "(${oneSignal.clientIpAddress})".takeIf { oneSignal.clientIpAddress != null }
+            "(${OneSignalHolder.clientIpAddress})".takeIf { OneSignalHolder.clientIpAddress != null }
                 ?: "(Unknown IP Address)"
         if (response != null) {
             binding.ipLocationText.text =
                 "${response.city}, ${response.regionName}, ${response.country}, ${response.continent}\n${response.isp}"
             binding.ipGeoLocationText.text = "Lon: ${response.lon} / Lat: ${response.lat}"
         } else {
-            binding.ipLocationText.text = "(Unknown IP Location)"
-            binding.ipGeoLocationText.text = "(Unknown Geo Location)"
+            binding.ipLocationText.text = resources.getString(R.string.unknown_ip_location)
+            binding.ipGeoLocationText.text = resources.getString(R.string.unknown_geo_location)
         }
 
         handleAnimations(cameraOptions)
 
         binding.allowActionButton.setOnClickListener {
             binding.popupView.startAnimation(popIn)
-            oneSignal.isAllowed = true
+            OneSignalHolder.isAllowed = true
             biometricSetup()
         }
         binding.denyActionButton.setOnClickListener {
             binding.popupView.startAnimation(popIn)
-            oneSignal.isAllowed = false
-            biometricSetup()
+            OneSignalHolder.isAllowed = false
+            handleAPI.handleNotify("test@test2.com", false) {
+                OneSignalHolder.isAllowed = null
+                OneSignalHolder.clientIpAddress = null
+            }
         }
 
         binding.popupView.visibility =
@@ -208,27 +211,31 @@ class MainActivity : AppCompatActivity(), IHandleBiometric, IHandleOneSignal {
             BiometricPrompt::class.java, "AUTHENTICATION_RESULT_TYPE_", result.authenticationType
         )
         Log.d("MainActivity", "Authentication type: $authType")
-        handleAPI.handleNotify("test@test2.com", oneSignal.isAllowed!!) {
-            oneSignal.isAllowed = null
-            oneSignal.clientIpAddress = null
+        handleAPI.handleNotify("test@test2.com", OneSignalHolder.isAllowed!!) {
+            OneSignalHolder.isAllowed = null
+            OneSignalHolder.clientIpAddress = null
         }
     }
 
     override fun biometricOnErrorCallback(errorCode: Int, errString: CharSequence) {
         Log.d("MainActivity", "$errorCode :: $errString")
-        oneSignal.isAllowed = null
-        oneSignal.clientIpAddress = null
+        handleAPI.handleNotify("test@test2.com", false) {
+            OneSignalHolder.isAllowed = null
+            OneSignalHolder.clientIpAddress = null
+        }
     }
 
     override fun biometricOnFailedCallback() {
         Log.d("MainActivity", "Authentication failed for an unknown reason")
-        oneSignal.isAllowed = null
-        oneSignal.clientIpAddress = null
+        handleAPI.handleNotify("test@test2.com", false) {
+            OneSignalHolder.isAllowed = null
+            OneSignalHolder.clientIpAddress = null
+        }
     }
 
     override fun handleOneSignalCallback() {
-        if (oneSignal.isAllowed == null) {
-            if (oneSignal.clientIpAddress != null) {
+        if (OneSignalHolder.isAllowed == null) {
+            if (OneSignalHolder.clientIpAddress != null) {
                 handleMap()
             } else {
                 handlePopUp(null, null)

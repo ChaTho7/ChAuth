@@ -2,6 +2,8 @@ package com.chatho.chauth.api
 
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import com.chatho.chauth.BuildConfig
+import com.chatho.chauth.holder.OneSignalHolder
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -15,13 +17,7 @@ import java.lang.Exception
 
 class HandleAPI(private val activity: ComponentActivity) {
     companion object {
-        private const val domain = "http://192.168.1.7:5000"
         private const val ipFetchDomain = "http://ip-api.com"
-        private val retrofit =
-            Retrofit.Builder().baseUrl(domain).addConverterFactory(GsonConverterFactory.create())
-                .build()
-
-        private val service = retrofit.create(APIService::class.java)
     }
 
     fun handleIPLocation(ipAddress: String, callback: (IPLocationResponse?, Boolean) -> Unit) {
@@ -76,6 +72,14 @@ class HandleAPI(private val activity: ComponentActivity) {
     }
 
     fun handleNotify(email: String, isAllowed: Boolean, callback: () -> Unit) {
+        val domain =
+            if (OneSignalHolder.backendBuildType == "development") "http://192.168.1.7:5000" else BuildConfig.BACKEND_EXPRESS_API_URL
+        val retrofit =
+            Retrofit.Builder().baseUrl(domain).addConverterFactory(GsonConverterFactory.create())
+                .build()
+
+        val service = retrofit.create(APIService::class.java)
+
         val requestData = AuthNotifyRequest(email, isAllowed)
         callback()
 
@@ -135,7 +139,15 @@ class HandleAPI(private val activity: ComponentActivity) {
         }
     }
 
-    fun handleQR(email: String, encodedQR: String) {
+    fun handleQR(email: String, encodedQR: String, buildType: String) {
+        val domain =
+            if (buildType == "development") "http://192.168.1.7:5000" else BuildConfig.BACKEND_EXPRESS_API_URL
+        val retrofit =
+            Retrofit.Builder().baseUrl(domain).addConverterFactory(GsonConverterFactory.create())
+                .build()
+
+        val service = retrofit.create(APIService::class.java)
+
         val requestData = AuthQRRequest(email, encodedQR)
 
         GlobalScope.launch(Dispatchers.IO) {

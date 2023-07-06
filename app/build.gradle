@@ -57,6 +57,7 @@ android {
     android.buildTypes.each { buildType ->
         buildType.buildConfigField 'String', 'MAPBOX_ACCESS_TOKEN', getSecrets()['MAPBOX_ACCESS_TOKEN']
         buildType.buildConfigField 'String', 'ONESIGNAL_APP_ID', getSecrets()['ONESIGNAL_APP_ID']
+        buildType.buildConfigField 'String', 'BACKEND_EXPRESS_API_URL', getSecrets()['BACKEND_EXPRESS_API_URL']
     }
 
     compileOptions {
