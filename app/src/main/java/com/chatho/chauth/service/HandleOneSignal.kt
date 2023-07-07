@@ -48,6 +48,6 @@ class HandleOneSignal(
             }
         }
 
-        OneSignal.promptForPushNotifications();
+        OneSignal.promptForPushNotifications()
     }
 }

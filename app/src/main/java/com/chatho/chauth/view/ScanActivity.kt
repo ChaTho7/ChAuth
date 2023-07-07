@@ -2,6 +2,7 @@ package com.chatho.chauth.view
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.camera.mlkit.vision.MlKitAnalyzer
 import androidx.camera.view.CameraController
@@ -33,8 +34,13 @@ class ScanActivity : AppCompatActivity() {
         if (handlePermission.allRuntimePermissionsGranted()) {
             startCamera()
         } else {
-            Toast.makeText(this,"Permissions have not been granted !", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Permissions have not been granted !", Toast.LENGTH_LONG).show()
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     private fun startCamera() {
@@ -43,23 +49,18 @@ class ScanActivity : AppCompatActivity() {
         val cameraController = LifecycleCameraController(baseContext)
         val previewView: PreviewView = viewBinding.viewFinder
 
-        val options = BarcodeScannerOptions.Builder()
-            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
-            .build()
+        val options =
+            BarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build()
         barcodeScanner = BarcodeScanning.getClient(options)
 
-        cameraController.setImageAnalysisAnalyzer(
-            ContextCompat.getMainExecutor(this),
+        cameraController.setImageAnalysisAnalyzer(ContextCompat.getMainExecutor(this),
             MlKitAnalyzer(
                 listOf(barcodeScanner),
                 CameraController.COORDINATE_SYSTEM_VIEW_REFERENCED,
                 ContextCompat.getMainExecutor(this)
             ) { result: MlKitAnalyzer.Result? ->
                 val barcodeResults = result?.getValue(barcodeScanner)
-                if ((barcodeResults == null) ||
-                    (barcodeResults.size == 0) ||
-                    (barcodeResults.first() == null)
-                ) {
+                if ((barcodeResults == null) || (barcodeResults.size == 0) || (barcodeResults.first() == null)) {
                     previewView.overlay.clear()
                     previewView.setOnTouchListener { _, _ -> false }
                     return@MlKitAnalyzer
@@ -71,11 +72,15 @@ class ScanActivity : AppCompatActivity() {
                 previewView.setOnTouchListener(qrCodeViewModel.qrCodeTouchCallback)
                 previewView.overlay.clear()
                 previewView.overlay.add(qrCodeDrawable)
-            }
-        )
+            })
 
         cameraController.bindToLifecycle(this)
         previewView.controller = cameraController
+    }
+
+    override fun onPause() {
+        super.onPause()
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     override fun onDestroy() {

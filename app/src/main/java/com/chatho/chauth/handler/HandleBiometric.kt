@@ -19,12 +19,16 @@ package com.chatho.chauth.handler
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import com.chatho.chauth.R
+import com.chatho.chauth.api.HandleAPI
+import com.chatho.chauth.holder.OneSignalHolder
+import com.chatho.chauth.util.findConstantFieldName
 import java.io.IOException
 import java.security.InvalidAlgorithmParameterException
 import java.security.InvalidKeyException
@@ -39,18 +43,15 @@ import javax.crypto.KeyGenerator
 import javax.crypto.NoSuchPaddingException
 import javax.crypto.SecretKey
 
-class HandleBiometric(
-    private val activity: AppCompatActivity,
-    private val onSucceededCallback: (result: BiometricPrompt.AuthenticationResult) -> Unit,
-    private val onErrorCallback: (errorCode: Int, errString: CharSequence) -> Unit,
-    private val onFailedCallback: () -> Unit,
-) {
+class HandleBiometric(private val activity: AppCompatActivity, val handleAPI: HandleAPI) :
+    IHandleBiometric {
     private lateinit var keyStore: KeyStore
     private lateinit var keyGenerator: KeyGenerator
     private lateinit var biometricPrompt: BiometricPrompt
 
     companion object {
         private const val ANDROID_KEY_STORE = "AndroidKeyStore"
+        private const val DEFAULT_KEY_NAME = "chauth_key"
     }
 
     init {
@@ -58,7 +59,7 @@ class HandleBiometric(
         createBiometricPrompt()
     }
 
-    fun authenticate(cipher: Cipher, keyName: String) {
+    private fun authenticate(cipher: Cipher, keyName: String) {
         val promptInfo = createPromptInfo()
 
         if (initCipher(cipher, keyName)) {
@@ -68,7 +69,7 @@ class HandleBiometric(
         }
     }
 
-    fun setupCiphers(): Cipher {
+    private fun setupCiphers(): Cipher {
         val defaultCipher: Cipher
         try {
             val cipherString =
@@ -76,9 +77,9 @@ class HandleBiometric(
             defaultCipher = Cipher.getInstance(cipherString)
         } catch (e: Exception) {
             when (e) {
-                is NoSuchAlgorithmException,
-                is NoSuchPaddingException ->
-                    throw RuntimeException("Failed to get an instance of Cipher", e)
+                is NoSuchAlgorithmException, is NoSuchPaddingException -> throw RuntimeException(
+                    "Failed to get an instance of Cipher", e
+                )
 
                 else -> throw e
             }
@@ -86,7 +87,7 @@ class HandleBiometric(
         return defaultCipher
     }
 
-    fun createKey(keyName: String) {
+    private fun createKey(keyName: String) {
         // The enrolling flow for fingerprint. This is where you ask the user to set up fingerprint
         // for your flow. Use of keys is necessary if you need to know if the set of enrolled
         // fingerprints has changed.
@@ -95,8 +96,7 @@ class HandleBiometric(
 
             val keyProperties = KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
             val builder = KeyGenParameterSpec.Builder(keyName, keyProperties)
-                .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
-                .setUserAuthenticationRequired(true)
+                .setBlockModes(KeyProperties.BLOCK_MODE_CBC).setUserAuthenticationRequired(true)
                 .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
                 .setInvalidatedByBiometricEnrollment(true)
 
@@ -106,10 +106,9 @@ class HandleBiometric(
             }
         } catch (e: Exception) {
             when (e) {
-                is NoSuchAlgorithmException,
-                is InvalidAlgorithmParameterException,
-                is CertificateException,
-                is IOException -> throw RuntimeException(e)
+                is NoSuchAlgorithmException, is InvalidAlgorithmParameterException, is CertificateException, is IOException -> throw RuntimeException(
+                    e
+                )
 
                 else -> throw e
             }
@@ -126,17 +125,17 @@ class HandleBiometric(
                     Toast.makeText(activity, "Use pattern to authenticate...", Toast.LENGTH_SHORT)
                         .show()
                 }
-                onErrorCallback(errorCode, errString)
+                biometricOnErrorCallback(errorCode, errString, handleAPI)
             }
 
             override fun onAuthenticationFailed() {
                 super.onAuthenticationFailed()
-                onFailedCallback()
+                biometricOnFailedCallback(handleAPI)
             }
 
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                 super.onAuthenticationSucceeded(result)
-                onSucceededCallback(result)
+                biometricOnSucceededCallback(result, handleAPI)
             }
         }
 
@@ -161,12 +160,9 @@ class HandleBiometric(
         } catch (e: Exception) {
             when (e) {
                 is KeyPermanentlyInvalidatedException -> return false
-                is KeyStoreException,
-                is CertificateException,
-                is UnrecoverableKeyException,
-                is IOException,
-                is NoSuchAlgorithmException,
-                is InvalidKeyException -> throw RuntimeException("Failed to init Cipher", e)
+                is KeyStoreException, is CertificateException, is UnrecoverableKeyException, is IOException, is NoSuchAlgorithmException, is InvalidKeyException -> throw RuntimeException(
+                    "Failed to init Cipher", e
+                )
 
                 else -> throw e
             }
@@ -182,17 +178,61 @@ class HandleBiometric(
 
         try {
             keyGenerator = KeyGenerator.getInstance(
-                KeyProperties.KEY_ALGORITHM_AES,
-                ANDROID_KEY_STORE
+                KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEY_STORE
             )
         } catch (e: Exception) {
             when (e) {
-                is NoSuchAlgorithmException,
-                is NoSuchProviderException ->
-                    throw RuntimeException("Failed to get an instance of KeyGenerator", e)
+                is NoSuchAlgorithmException, is NoSuchProviderException -> throw RuntimeException(
+                    "Failed to get an instance of KeyGenerator", e
+                )
 
                 else -> throw e
             }
+        }
+    }
+
+    override fun biometricSetup() {
+        if (BiometricManager.from(activity)
+                .canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) == BiometricManager.BIOMETRIC_SUCCESS
+        ) {
+            val defaultCipher: Cipher = setupCiphers()
+
+            createKey(DEFAULT_KEY_NAME)
+            authenticate(defaultCipher, DEFAULT_KEY_NAME)
+        } else {
+            Toast.makeText(activity, "Biometric is not available...", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    override fun biometricOnSucceededCallback(
+        result: BiometricPrompt.AuthenticationResult, handleAPI: HandleAPI
+    ) {
+        Log.d("MainActivity", "Authentication is successful")
+        val authType = findConstantFieldName(
+            BiometricPrompt::class.java, "AUTHENTICATION_RESULT_TYPE_", result.authenticationType
+        )
+        Log.d("MainActivity", "Authentication type: $authType")
+        handleAPI.handleNotify("test@test2.com", OneSignalHolder.isAllowed!!) {
+            OneSignalHolder.isAllowed = null
+            OneSignalHolder.clientIpAddress = null
+        }
+    }
+
+    override fun biometricOnErrorCallback(
+        errorCode: Int, errString: CharSequence, handleAPI: HandleAPI
+    ) {
+        Log.d("MainActivity", "$errorCode :: $errString")
+        handleAPI.handleNotify("test@test2.com", false) {
+            OneSignalHolder.isAllowed = null
+            OneSignalHolder.clientIpAddress = null
+        }
+    }
+
+    override fun biometricOnFailedCallback(handleAPI: HandleAPI) {
+        Log.d("MainActivity", "Authentication failed for an unknown reason")
+        handleAPI.handleNotify("test@test2.com", false) {
+            OneSignalHolder.isAllowed = null
+            OneSignalHolder.clientIpAddress = null
         }
     }
 }

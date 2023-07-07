@@ -39,3 +39,4 @@ outTmp/
 /test.output
 /kotlin-native/dist
 kotlin-ide/
+/src/main/assets/auth.json
