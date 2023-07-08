@@ -22,7 +22,6 @@ import android.graphics.drawable.Drawable
 import androidx.core.content.ContextCompat
 import com.chatho.chauth.R
 import com.chatho.chauth.viewmodel.QrCodeViewModel
-import kotlin.math.max
 
 /**
  * A Drawable that handles displaying a QR Code's data and a bounding box around the QR code.
@@ -31,14 +30,14 @@ class QrCodeDrawable(private val context: Context, private val qrCodeViewModel: 
     Drawable() {
     private val boundingRectPaint = Paint().apply {
         style = Paint.Style.STROKE
-        color = ContextCompat.getColor(context, R.color.cyan)
+        color = ContextCompat.getColor(context, R.color.clear_green)
         strokeWidth = 5F
         alpha = 200
     }
 
     private val barcodeTypeRectPaint = Paint().apply {
         style = Paint.Style.FILL
-        color = ContextCompat.getColor(context, R.color.dark_blue)
+        color = ContextCompat.getColor(context, R.color.dark_purple_grey_color_2)
         alpha = 255
     }
     private val barcodeTypeTextPaint = Paint().apply {
@@ -49,7 +48,7 @@ class QrCodeDrawable(private val context: Context, private val qrCodeViewModel: 
 
     private val contentRectPaint = Paint().apply {
         style = Paint.Style.FILL
-        color = ContextCompat.getColor(context, R.color.dark_blue)
+        color = ContextCompat.getColor(context, R.color.dark_purple_grey_color_2)
         alpha = 255
     }
     private val contentTextPaint = Paint().apply {

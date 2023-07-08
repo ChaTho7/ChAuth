@@ -2,6 +2,7 @@
 <resources>
     <color name="dark_grey">#3a4256</color>
     <color name="dark_green">#3A7F56</color>
+    <color name="clear_green">#47E6B1</color>
     <color name="dark_blue">#092B49</color>
     <color name="dark_cyan">#2b6a6a</color>
     <color name="white">#fafafa</color>
@@ -9,4 +10,6 @@
     <color name="cyan">#00DBF3</color>
     <color name="ice">#dcffff</color>
     <color name="red">#ff6a6a</color>
+    <color name="dark_purple_grey_color_1">#4A4865</color>
+    <color name="dark_purple_grey_color_2">#3F3D56</color>
 </resources>
