@@ -40,3 +40,5 @@ outTmp/
 /kotlin-native/dist
 kotlin-ide/
 /src/main/assets/auth.json
+/src/main/res/drawable/qr_code_icon.png
+/src/main/res/drawable/login_icon.png

@@ -16,13 +16,21 @@
 
 package com.chatho.chauth.handler
 
+import android.app.Activity.RESULT_OK
+import android.app.KeyguardManager
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import com.chatho.chauth.R
@@ -49,9 +57,34 @@ class HandleBiometric(private val activity: AppCompatActivity, val handleAPI: Ha
     private lateinit var keyGenerator: KeyGenerator
     private lateinit var biometricPrompt: BiometricPrompt
 
+    private val keyGuard = activity.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+    private var triesForSecuritySetup = 0
+    private val securtiySetupActivityResultLauncher = activity.registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        triesForSecuritySetup += 1
+        if (result.resultCode == RESULT_OK && triesForSecuritySetup <= MAX_TRIES_FOR_SECURITY_SETUP) {
+            biometricSetup()
+        } else {
+            Toast.makeText(
+                activity, "You have to setup a security method in your device.", Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+    private val deviceCredentialActivityResultLauncher = activity.registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            deviceCredentialOnSucceededCallback(handleAPI)
+        } else {
+            deviceCredentialOnFailedCallback(handleAPI)
+        }
+    }
+
     companion object {
         private const val ANDROID_KEY_STORE = "AndroidKeyStore"
         private const val DEFAULT_KEY_NAME = "chauth_key"
+        private const val MAX_TRIES_FOR_SECURITY_SETUP = 2
     }
 
     init {
@@ -59,10 +92,10 @@ class HandleBiometric(private val activity: AppCompatActivity, val handleAPI: Ha
         createBiometricPrompt()
     }
 
-    private fun authenticate(cipher: Cipher, keyName: String) {
+    private fun authenticate(cipher: Cipher) {
         val promptInfo = createPromptInfo()
 
-        if (initCipher(cipher, keyName)) {
+        if (initCipher(cipher)) {
             biometricPrompt.authenticate(promptInfo, BiometricPrompt.CryptoObject(cipher))
         } else {
             println("loginWithPassword")
@@ -87,7 +120,7 @@ class HandleBiometric(private val activity: AppCompatActivity, val handleAPI: Ha
         return defaultCipher
     }
 
-    private fun createKey(keyName: String) {
+    private fun createKey() {
         // The enrolling flow for fingerprint. This is where you ask the user to set up fingerprint
         // for your flow. Use of keys is necessary if you need to know if the set of enrolled
         // fingerprints has changed.
@@ -95,7 +128,7 @@ class HandleBiometric(private val activity: AppCompatActivity, val handleAPI: Ha
             keyStore.load(null)
 
             val keyProperties = KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
-            val builder = KeyGenParameterSpec.Builder(keyName, keyProperties)
+            val builder = KeyGenParameterSpec.Builder(DEFAULT_KEY_NAME, keyProperties)
                 .setBlockModes(KeyProperties.BLOCK_MODE_CBC).setUserAuthenticationRequired(true)
                 .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
                 .setInvalidatedByBiometricEnrollment(true)
@@ -148,14 +181,14 @@ class HandleBiometric(private val activity: AppCompatActivity, val handleAPI: Ha
             .setSubtitle(activity.resources.getString(R.string.biometric_subtitle))
             .setConfirmationRequired(false)
             .setNegativeButtonText(activity.resources.getString(R.string.biometric_negative_button_text))
-            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG) // Allow PIN/pattern/password authentication.
+            .setAllowedAuthenticators(BIOMETRIC_STRONG) // Allow PIN/pattern/password authentication.
             .build()
     }
 
-    private fun initCipher(cipher: Cipher, keyName: String): Boolean {
+    private fun initCipher(cipher: Cipher): Boolean {
         try {
             keyStore.load(null)
-            cipher.init(Cipher.ENCRYPT_MODE, keyStore.getKey(keyName, null) as SecretKey)
+            cipher.init(Cipher.ENCRYPT_MODE, keyStore.getKey(DEFAULT_KEY_NAME, null) as SecretKey)
             return true
         } catch (e: Exception) {
             when (e) {
@@ -192,15 +225,62 @@ class HandleBiometric(private val activity: AppCompatActivity, val handleAPI: Ha
     }
 
     override fun biometricSetup() {
-        if (BiometricManager.from(activity)
-                .canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) == BiometricManager.BIOMETRIC_SUCCESS
-        ) {
-            val defaultCipher: Cipher = setupCiphers()
+        val biometricManager = BiometricManager.from(activity)
+        when (biometricManager.canAuthenticate(BIOMETRIC_STRONG)) {
+            BiometricManager.BIOMETRIC_SUCCESS -> {
+                val defaultCipher: Cipher = setupCiphers()
 
-            createKey(DEFAULT_KEY_NAME)
-            authenticate(defaultCipher, DEFAULT_KEY_NAME)
-        } else {
-            Toast.makeText(activity, "Biometric is not available...", Toast.LENGTH_LONG).show()
+                createKey()
+                authenticate(defaultCipher)
+            }
+
+            BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> {
+                Toast.makeText(
+                    activity,
+                    "You have to setup a biometric method in your device.",
+                    Toast.LENGTH_LONG
+                ).show()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    val intent = Intent(Settings.ACTION_BIOMETRIC_ENROLL).apply {
+                        putExtra(
+                            Settings.EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED, BIOMETRIC_STRONG
+                        )
+                    }
+                    securtiySetupActivityResultLauncher.launch(intent)
+                } else {
+                    Toast.makeText(
+                        activity,
+                        "Authentication not supported on APIs lower that 26..",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+
+            else -> {
+                if (keyGuard.isDeviceSecure) {
+                    val intent = keyGuard.createConfirmDeviceCredentialIntent(
+                        activity.resources.getString(R.string.biometric_title),
+                        activity.resources.getString(R.string.biometric_subtitle)
+                    )
+                    deviceCredentialActivityResultLauncher.launch(intent)
+                } else {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        val intent = Intent(Settings.ACTION_BIOMETRIC_ENROLL).apply {
+                            putExtra(
+                                Settings.EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED,
+                                BiometricManager.Authenticators.DEVICE_CREDENTIAL
+                            )
+                        }
+                        securtiySetupActivityResultLauncher.launch(intent)
+                    } else {
+                        Toast.makeText(
+                            activity,
+                            "You have to setup a security method to your device.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
         }
     }
 
@@ -212,27 +292,28 @@ class HandleBiometric(private val activity: AppCompatActivity, val handleAPI: Ha
             BiometricPrompt::class.java, "AUTHENTICATION_RESULT_TYPE_", result.authenticationType
         )
         Log.d("MainActivity", "Authentication type: $authType")
-        handleAPI.handleNotify("test@test2.com", OneSignalHolder.isAllowed!!) {
-            OneSignalHolder.isAllowed = null
-            OneSignalHolder.clientIpAddress = null
-        }
+        handleAPI.handleNotify("test@test2.com", OneSignalHolder.isAllowed!!)
     }
 
     override fun biometricOnErrorCallback(
         errorCode: Int, errString: CharSequence, handleAPI: HandleAPI
     ) {
         Log.d("MainActivity", "$errorCode :: $errString")
-        handleAPI.handleNotify("test@test2.com", false) {
-            OneSignalHolder.isAllowed = null
-            OneSignalHolder.clientIpAddress = null
-        }
+        handleAPI.handleNotify("test@test2.com", false)
     }
 
     override fun biometricOnFailedCallback(handleAPI: HandleAPI) {
         Log.d("MainActivity", "Authentication failed for an unknown reason")
-        handleAPI.handleNotify("test@test2.com", false) {
-            OneSignalHolder.isAllowed = null
-            OneSignalHolder.clientIpAddress = null
-        }
+        handleAPI.handleNotify("test@test2.com", false)
+    }
+
+    override fun deviceCredentialOnSucceededCallback(handleAPI: HandleAPI) {
+        Log.d("MainActivity", "Authentication is successful")
+        Log.d("MainActivity", "Authentication type: DEVICE CREDENTIAL")
+        handleAPI.handleNotify("test@test2.com", OneSignalHolder.isAllowed!!)
+    }
+
+    override fun deviceCredentialOnFailedCallback(handleAPI: HandleAPI) {
+        handleAPI.handleNotify("test@test2.com", false)
     }
 }

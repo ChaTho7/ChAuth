@@ -71,7 +71,7 @@ class HandleAPI(private val activity: ComponentActivity) {
         }
     }
 
-    fun handleNotify(email: String, isAllowed: Boolean, callback: () -> Unit) {
+    fun handleNotify(email: String, isAllowed: Boolean) {
         val domain =
             if (OneSignalHolder.backendBuildType == "development") "http://192.168.1.7:5000" else BuildConfig.BACKEND_EXPRESS_API_URL
         val retrofit =
@@ -81,7 +81,8 @@ class HandleAPI(private val activity: ComponentActivity) {
         val service = retrofit.create(APIService::class.java)
 
         val requestData = AuthNotifyRequest(email, isAllowed)
-        callback()
+        OneSignalHolder.isAllowed = null
+        OneSignalHolder.clientIpAddress = null
 
         GlobalScope.launch(Dispatchers.IO) {
             try {
@@ -135,7 +136,6 @@ class HandleAPI(private val activity: ComponentActivity) {
                     ).show()
                 }
             }
-
         }
     }
 

@@ -38,10 +38,7 @@ class HandleOneSignal(
 
                 "auth_deny" -> {
                     OneSignalHolder.isAllowed = false
-                    handleAPI.handleNotify("test@test2.com", false) {
-                        OneSignalHolder.isAllowed = null
-                        OneSignalHolder.clientIpAddress = null
-                    }
+                    handleAPI.handleNotify("test@test2.com", false)
                 }
 
                 else -> handleOneSignalCallback()
