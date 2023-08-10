@@ -12,4 +12,6 @@
     <color name="red">#ff6a6a</color>
     <color name="dark_purple_grey_color_1">#4A4865</color>
     <color name="dark_purple_grey_color_2">#3F3D56</color>
+
+    <color name="dark_grey_alpha_80">#803a4256</color>
 </resources>

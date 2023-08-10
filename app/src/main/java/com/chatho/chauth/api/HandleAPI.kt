@@ -1,12 +1,12 @@
 package com.chatho.chauth.api
 
+import android.content.Context
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import com.chatho.chauth.BuildConfig
 import com.chatho.chauth.holder.OneSignalHolder
 import com.google.gson.Gson
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import okhttp3.ResponseBody
 import retrofit2.Call
@@ -15,7 +15,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.lang.Exception
 
-class HandleAPI(private val activity: ComponentActivity) {
+class HandleAPI(private val context: Context) {
     companion object {
         private const val ipFetchDomain = "http://ip-api.com"
     }
@@ -28,7 +28,7 @@ class HandleAPI(private val activity: ComponentActivity) {
 
         val url = "json/$ipAddress?fields=1622745"
 
-        GlobalScope.launch(Dispatchers.IO) {
+        CoroutineScope(Dispatchers.IO).launch {
             try {
                 val request = service.handleIPGeo(url)
 
@@ -51,9 +51,9 @@ class HandleAPI(private val activity: ComponentActivity) {
                     override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                         callback(null, false)
 
-                        activity.runOnUiThread {
+                        CoroutineScope(Dispatchers.Main).launch {
                             Toast.makeText(
-                                activity, "Error: ${t.message}", Toast.LENGTH_LONG
+                                context, "Error: ${t.message}", Toast.LENGTH_LONG
                             ).show()
                         }
                     }
@@ -61,9 +61,9 @@ class HandleAPI(private val activity: ComponentActivity) {
             } catch (e: Exception) {
                 callback(null, false)
 
-                activity.runOnUiThread {
+                CoroutineScope(Dispatchers.Main).launch {
                     Toast.makeText(
-                        activity, "Fetching IP location failed: ${e.message}", Toast.LENGTH_LONG
+                        context, "Fetching IP location failed: ${e.message}", Toast.LENGTH_LONG
                     ).show()
                 }
             }
@@ -84,7 +84,7 @@ class HandleAPI(private val activity: ComponentActivity) {
         OneSignalHolder.isAllowed = null
         OneSignalHolder.clientIpAddress = null
 
-        GlobalScope.launch(Dispatchers.IO) {
+        CoroutineScope(Dispatchers.IO).launch {
             try {
                 val request = service.handleNotify(requestData)
 
@@ -98,9 +98,9 @@ class HandleAPI(private val activity: ComponentActivity) {
                             val authResponse =
                                 Gson().fromJson(responseBodyString, AuthNotifyResponse::class.java)
 
-                            activity.runOnUiThread {
+                            CoroutineScope(Dispatchers.Main).launch {
                                 Toast.makeText(
-                                    activity,
+                                    context,
                                     if (authResponse.success) authResponse.message else "Error: ${authResponse.message}",
                                     if (authResponse.success) Toast.LENGTH_SHORT else Toast.LENGTH_LONG
                                 ).show()
@@ -111,9 +111,9 @@ class HandleAPI(private val activity: ComponentActivity) {
                             val authResponse =
                                 Gson().fromJson(errorBodyString, AuthNotifyResponse::class.java)
 
-                            activity.runOnUiThread {
+                            CoroutineScope(Dispatchers.Main).launch {
                                 Toast.makeText(
-                                    activity,
+                                    context,
                                     "${response.code()} Error:${authResponse.message}",
                                     Toast.LENGTH_LONG
                                 ).show()
@@ -122,17 +122,17 @@ class HandleAPI(private val activity: ComponentActivity) {
                     }
 
                     override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                        activity.runOnUiThread {
+                        CoroutineScope(Dispatchers.Main).launch {
                             Toast.makeText(
-                                activity, "Error: ${t.message}", Toast.LENGTH_LONG
+                                context, "Error: ${t.message}", Toast.LENGTH_LONG
                             ).show()
                         }
                     }
                 })
             } catch (e: Exception) {
-                activity.runOnUiThread {
+                CoroutineScope(Dispatchers.Main).launch {
                     Toast.makeText(
-                        activity, "Auth failed: ${e.message}", Toast.LENGTH_LONG
+                        context, "Auth failed: ${e.message}", Toast.LENGTH_LONG
                     ).show()
                 }
             }
@@ -150,7 +150,7 @@ class HandleAPI(private val activity: ComponentActivity) {
 
         val requestData = AuthQRRequest(email, encodedQR)
 
-        GlobalScope.launch(Dispatchers.IO) {
+        CoroutineScope(Dispatchers.IO).launch {
             try {
                 val request = service.handleQR(requestData)
 
@@ -164,9 +164,9 @@ class HandleAPI(private val activity: ComponentActivity) {
                             val authResponse =
                                 Gson().fromJson(responseBodyString, AuthQRResponse::class.java)
 
-                            activity.runOnUiThread {
+                            CoroutineScope(Dispatchers.Main).launch {
                                 Toast.makeText(
-                                    activity,
+                                    context,
                                     if (authResponse.success) authResponse.message else "Error: ${authResponse.message}",
                                     if (authResponse.success) Toast.LENGTH_SHORT else Toast.LENGTH_LONG
                                 ).show()
@@ -177,9 +177,9 @@ class HandleAPI(private val activity: ComponentActivity) {
                             val authResponse =
                                 Gson().fromJson(errorBodyString, AuthQRResponse::class.java)
 
-                            activity.runOnUiThread {
+                            CoroutineScope(Dispatchers.Main).launch {
                                 Toast.makeText(
-                                    activity,
+                                    context,
                                     "${response.code()} Error:${authResponse.message}",
                                     Toast.LENGTH_LONG
                                 ).show()
@@ -188,21 +188,20 @@ class HandleAPI(private val activity: ComponentActivity) {
                     }
 
                     override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                        activity.runOnUiThread {
+                        CoroutineScope(Dispatchers.Main).launch {
                             Toast.makeText(
-                                activity, "Error: ${t.message}", Toast.LENGTH_LONG
+                                context, "Error: ${t.message}", Toast.LENGTH_LONG
                             ).show()
                         }
                     }
                 })
             } catch (e: Exception) {
-                activity.runOnUiThread {
+                CoroutineScope(Dispatchers.Main).launch {
                     Toast.makeText(
-                        activity, "Auth failed: ${e.message}", Toast.LENGTH_LONG
+                        context, "Auth failed: ${e.message}", Toast.LENGTH_LONG
                     ).show()
                 }
             }
-
         }
     }
 }

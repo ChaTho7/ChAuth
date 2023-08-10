@@ -12,6 +12,7 @@ import com.chatho.chauth.holder.OneSignalHolder
 import com.chatho.chauth.service.IHandleOneSignal
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
+import com.mapbox.maps.MapboxMap
 import com.mapbox.maps.Style
 import com.mapbox.maps.dsl.cameraOptions
 import com.mapbox.maps.plugin.animation.MapAnimationOptions
@@ -21,11 +22,12 @@ import com.mapbox.maps.plugin.gestures.gestures
 class HandleMapView(
     private val activity: AppCompatActivity,
     private val binding: ActivityMainBinding,
-    private val handleAPI: HandleAPI
+    private val handleAPI: HandleAPI,
+    private val handleBiometric: HandleBiometric
 ) : IHandleOneSignal {
-    private val handleBiometric: HandleBiometric = HandleBiometric(activity, handleAPI)
     private lateinit var popOut: Animation
     private lateinit var popIn: Animation
+    private lateinit var mapBoxMap: MapboxMap
 
     private fun handleMapGestures() {
         binding.mapView.gestures.scrollDecelerationEnabled = false
@@ -43,7 +45,8 @@ class HandleMapView(
     }
 
     private fun setupMap() {
-        binding.mapView.getMapboxMap().loadStyleUri(Style.OUTDOORS) {
+        mapBoxMap = binding.mapView.getMapboxMap()
+        mapBoxMap.loadStyleUri(Style.OUTDOORS) {
             handleMapGestures()
 
             handleAPI.handleIPLocation(OneSignalHolder.clientIpAddress!!) { response, success ->
@@ -97,16 +100,15 @@ class HandleMapView(
     }
 
     private fun handleAnimations(cameraOptions: CameraOptions?) {
-        popOut = AnimationUtils.loadAnimation(activity, R.anim.appear)
+        popOut = AnimationUtils.loadAnimation(activity, R.anim.slide_in_bottom)
         popOut.setAnimationListener(object : Animation.AnimationListener {
             override fun onAnimationStart(p0: Animation?) {
                 binding.popupView.visibility = View.VISIBLE
                 binding.enableQrScanButton.isEnabled = false
 
-                binding.mapView.getMapboxMap()
-                    .flyTo(cameraOptions!!, MapAnimationOptions.mapAnimationOptions {
-                        duration(3_000)
-                    })
+                mapBoxMap.flyTo(cameraOptions!!, MapAnimationOptions.mapAnimationOptions {
+                    duration(3_000)
+                })
             }
 
             override fun onAnimationEnd(p0: Animation?) {}
@@ -114,7 +116,7 @@ class HandleMapView(
             override fun onAnimationRepeat(p0: Animation?) {}
         })
 
-        popIn = AnimationUtils.loadAnimation(activity, R.anim.disappear)
+        popIn = AnimationUtils.loadAnimation(activity, R.anim.slide_out_bottom)
         popIn.setAnimationListener(object : Animation.AnimationListener {
             override fun onAnimationStart(p0: Animation?) {}
 
@@ -122,7 +124,7 @@ class HandleMapView(
                 binding.popupView.visibility = View.GONE
                 binding.ipAddressText.text = ""
                 binding.enableQrScanButton.isEnabled = true
-                binding.mapView.getMapboxMap().setCamera(cameraOptions {
+                mapBoxMap.setCamera(cameraOptions {
                     center(Point.fromLngLat(35.2, 38.9))
                     zoom(3.0)
                 })
@@ -140,6 +142,8 @@ class HandleMapView(
             } else {
                 setupPopUp(null, null)
             }
+        } else if (OneSignalHolder.isAllowed == false) {
+            handleAPI.handleNotify("test@test2.com", false)
         } else {
             handleBiometric.biometricSetup()
         }

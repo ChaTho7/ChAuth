@@ -2,7 +2,6 @@ package com.chatho.chauth.view
 
 import android.animation.Animator
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
@@ -10,12 +9,17 @@ import android.text.style.ForegroundColorSpan
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.chatho.chauth.service.FloatingWindow
 import com.chatho.chauth.R
 import com.chatho.chauth.databinding.ActivitySplashBinding
+import com.chatho.chauth.handler.HandlePermission
+import com.chatho.chauth.holder.OneSignalHolder
+import com.onesignal.OneSignal
 
 class SplashActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySplashBinding
@@ -25,7 +29,9 @@ class SplashActivity : AppCompatActivity() {
         binding = ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val fadeInAnimation = AnimationUtils.loadAnimation(this@SplashActivity, R.anim.fade)
+        handleOneSignal()
+
+        val fadeInAnimation = AnimationUtils.loadAnimation(this, R.anim.fade_in_splash_screen)
         fadeInAnimation.setAnimationListener(object : Animation.AnimationListener {
             override fun onAnimationStart(p0: Animation?) {
                 binding.appName.visibility = View.VISIBLE
@@ -58,6 +64,34 @@ class SplashActivity : AppCompatActivity() {
 
         hideSystemBars()
         binding.animationView.playAnimation()
+    }
+
+    private fun handleOneSignal() {
+        OneSignal.setNotificationOpenedHandler {
+            OneSignalHolder.clientIpAddress =
+                it.notification.additionalData.get("ip_address") as String?
+            OneSignalHolder.backendBuildType =
+                it.notification.additionalData.get("build_type") as String?
+
+            when (it.action.actionId) {
+                "auth_allow" -> {
+                    OneSignalHolder.isAllowed = true
+                }
+
+                "auth_deny" -> {
+                    OneSignalHolder.isAllowed = false
+                }
+            }
+
+            if (FloatingWindow.isServiceRunning(this)) {
+                stopService(Intent(this, FloatingWindow::class.java))
+            }
+
+            if (HandlePermission(this).getOverlayPermission()) {
+                startService(Intent(this, FloatingWindow::class.java))
+                finish()
+            }
+        }
     }
 
     private fun setAppName() {
