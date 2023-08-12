@@ -1,6 +1,10 @@
 package com.chatho.chauth.util
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.launch
 import java.lang.reflect.Field
+import kotlin.coroutines.CoroutineContext
 
 fun findConstantFieldName(clazz: Class<*>, prefix: String, value: Int): String {
     val fields: Array<Field> = clazz.fields
@@ -29,4 +33,10 @@ private fun defaultValue(value: Any): Any {
         is Long -> 0L
         else -> throw IllegalArgumentException("Unknown type: ${value.javaClass}")
     }
+}
+
+fun runInCoroutineScope(context: CoroutineContext, runBlock: suspend CoroutineScope.() -> Unit) {
+    CoroutineScope(context).launch(
+        context, CoroutineStart.DEFAULT, runBlock
+    )
 }

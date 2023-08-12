@@ -88,7 +88,10 @@ class SplashActivity : AppCompatActivity() {
             }
 
             if (HandlePermission(this).getOverlayPermission()) {
-                startService(Intent(this, FloatingWindow::class.java))
+//                startService(Intent(this, FloatingWindow::class.java))
+//                finish()
+                val intent = Intent(this, FloatingActivity::class.java)
+                startActivity(intent)
                 finish()
             }
         }

@@ -56,6 +56,7 @@ class HandleBiometric(private val activity: AppCompatActivity, val handleAPI: Ha
     private lateinit var keyStore: KeyStore
     private lateinit var keyGenerator: KeyGenerator
     private lateinit var biometricPrompt: BiometricPrompt
+    private var closeApp = false
 
     private val keyGuard = activity.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
     private var triesForSecuritySetup = 0
@@ -224,7 +225,8 @@ class HandleBiometric(private val activity: AppCompatActivity, val handleAPI: Ha
         }
     }
 
-    override fun biometricSetup() {
+    override fun biometricSetup(closeAppAfterProcess: Boolean) {
+        closeApp = closeAppAfterProcess
         val biometricManager = BiometricManager.from(activity)
         when (biometricManager.canAuthenticate(BIOMETRIC_STRONG)) {
             BiometricManager.BIOMETRIC_SUCCESS -> {
@@ -293,6 +295,9 @@ class HandleBiometric(private val activity: AppCompatActivity, val handleAPI: Ha
         )
         Log.d("MainActivity", "Authentication type: $authType")
         handleAPI.handleNotify("test@test2.com", OneSignalHolder.isAllowed!!)
+        if (closeApp) {
+            activity.finish()
+        }
     }
 
     override fun biometricOnErrorCallback(
@@ -300,11 +305,17 @@ class HandleBiometric(private val activity: AppCompatActivity, val handleAPI: Ha
     ) {
         Log.d("MainActivity", "$errorCode :: $errString")
         handleAPI.handleNotify("test@test2.com", false)
+        if (closeApp) {
+            activity.finish()
+        }
     }
 
     override fun biometricOnFailedCallback(handleAPI: HandleAPI) {
         Log.d("MainActivity", "Authentication failed for an unknown reason")
         handleAPI.handleNotify("test@test2.com", false)
+        if (closeApp) {
+            activity.finish()
+        }
     }
 
     override fun deviceCredentialOnSucceededCallback(handleAPI: HandleAPI) {

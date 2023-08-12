@@ -23,8 +23,9 @@ import androidx.lifecycle.setViewTreeLifecycleOwner
 import com.chatho.chauth.R
 import com.chatho.chauth.api.HandleAPI
 import com.chatho.chauth.api.IPLocationResponse
-import com.chatho.chauth.databinding.FloatingLayoutBinding
+import com.chatho.chauth.databinding.WindowFloatingBinding
 import com.chatho.chauth.holder.OneSignalHolder
+import com.chatho.chauth.util.runInCoroutineScope
 import com.chatho.chauth.view.MainActivity
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
@@ -38,14 +39,12 @@ import com.mapbox.maps.plugin.attribution.attribution
 import com.mapbox.maps.plugin.gestures.gestures
 import com.mapbox.maps.plugin.logo.logo
 import com.mapbox.maps.plugin.scalebar.scalebar
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.util.Timer
 import java.util.TimerTask
 
 class FloatingWindow : Service(), LifecycleOwner {
-    private lateinit var binding: FloatingLayoutBinding
+    private lateinit var binding: WindowFloatingBinding
     private lateinit var handleAPI: HandleAPI
     private var floatWindowLayoutParam: WindowManager.LayoutParams? = null
     private var windowManager: WindowManager? = null
@@ -66,9 +65,9 @@ class FloatingWindow : Service(), LifecycleOwner {
     override fun onCreate() {
         super.onCreate()
 
-        val inflater = baseContext.getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
+        val inflater = getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
         inflater.context.setTheme(R.style.Theme_ChAuth)
-        binding = FloatingLayoutBinding.inflate(inflater)
+        binding = WindowFloatingBinding.inflate(inflater)
 
         handleAPI = HandleAPI(applicationContext)
 
@@ -216,6 +215,8 @@ class FloatingWindow : Service(), LifecycleOwner {
                 closeButton.visibility = View.VISIBLE
                 closeButton.setImageResource(R.drawable.close)
                 closeButton.setOnClickListener {
+                    OneSignalHolder.isAllowed = false
+                    handleAPI.handleNotify("test@test2.com", false)
                     maximazeBack(false)
                 }
             }
@@ -237,7 +238,7 @@ class FloatingWindow : Service(), LifecycleOwner {
             }
 
             override fun onAnimationEnd(p0: Animation?) {
-                CoroutineScope(Dispatchers.Main).launch {
+                runInCoroutineScope(Dispatchers.Main) {
                     closeButton.visibility = View.GONE
                 }
             }
@@ -275,7 +276,6 @@ class FloatingWindow : Service(), LifecycleOwner {
 
     companion object {
         private var LAYOUT_TYPE = 0
-
         fun isServiceRunning(context: Context): Boolean {
             val manager = context.getSystemService(ACTIVITY_SERVICE) as ActivityManager?
 

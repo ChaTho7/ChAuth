@@ -61,7 +61,7 @@ class MainActivity : AppCompatActivity() {
         }
         intent.getBooleanExtra("needBiometric", false).let { needBiometric ->
             if (needBiometric) {
-                handleBiometric.biometricSetup()
+                handleBiometric.biometricSetup(true)
             }
         }
     }

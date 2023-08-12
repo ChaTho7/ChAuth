@@ -4,10 +4,9 @@ import android.content.Context
 import android.widget.Toast
 import com.chatho.chauth.BuildConfig
 import com.chatho.chauth.holder.OneSignalHolder
+import com.chatho.chauth.util.runInCoroutineScope
 import com.google.gson.Gson
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
@@ -28,7 +27,7 @@ class HandleAPI(private val context: Context) {
 
         val url = "json/$ipAddress?fields=1622745"
 
-        CoroutineScope(Dispatchers.IO).launch {
+        runInCoroutineScope(Dispatchers.IO) {
             try {
                 val request = service.handleIPGeo(url)
 
@@ -51,7 +50,7 @@ class HandleAPI(private val context: Context) {
                     override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                         callback(null, false)
 
-                        CoroutineScope(Dispatchers.Main).launch {
+                        runInCoroutineScope(Dispatchers.Main) {
                             Toast.makeText(
                                 context, "Error: ${t.message}", Toast.LENGTH_LONG
                             ).show()
@@ -61,7 +60,7 @@ class HandleAPI(private val context: Context) {
             } catch (e: Exception) {
                 callback(null, false)
 
-                CoroutineScope(Dispatchers.Main).launch {
+                runInCoroutineScope(Dispatchers.Main) {
                     Toast.makeText(
                         context, "Fetching IP location failed: ${e.message}", Toast.LENGTH_LONG
                     ).show()
@@ -84,7 +83,7 @@ class HandleAPI(private val context: Context) {
         OneSignalHolder.isAllowed = null
         OneSignalHolder.clientIpAddress = null
 
-        CoroutineScope(Dispatchers.IO).launch {
+        runInCoroutineScope(Dispatchers.IO) {
             try {
                 val request = service.handleNotify(requestData)
 
@@ -98,7 +97,7 @@ class HandleAPI(private val context: Context) {
                             val authResponse =
                                 Gson().fromJson(responseBodyString, AuthNotifyResponse::class.java)
 
-                            CoroutineScope(Dispatchers.Main).launch {
+                            runInCoroutineScope(Dispatchers.Main) {
                                 Toast.makeText(
                                     context,
                                     if (authResponse.success) authResponse.message else "Error: ${authResponse.message}",
@@ -111,7 +110,7 @@ class HandleAPI(private val context: Context) {
                             val authResponse =
                                 Gson().fromJson(errorBodyString, AuthNotifyResponse::class.java)
 
-                            CoroutineScope(Dispatchers.Main).launch {
+                            runInCoroutineScope(Dispatchers.Main) {
                                 Toast.makeText(
                                     context,
                                     "${response.code()} Error:${authResponse.message}",
@@ -122,7 +121,7 @@ class HandleAPI(private val context: Context) {
                     }
 
                     override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                        CoroutineScope(Dispatchers.Main).launch {
+                        runInCoroutineScope(Dispatchers.Main) {
                             Toast.makeText(
                                 context, "Error: ${t.message}", Toast.LENGTH_LONG
                             ).show()
@@ -130,7 +129,7 @@ class HandleAPI(private val context: Context) {
                     }
                 })
             } catch (e: Exception) {
-                CoroutineScope(Dispatchers.Main).launch {
+                runInCoroutineScope(Dispatchers.Main) {
                     Toast.makeText(
                         context, "Auth failed: ${e.message}", Toast.LENGTH_LONG
                     ).show()
@@ -150,7 +149,7 @@ class HandleAPI(private val context: Context) {
 
         val requestData = AuthQRRequest(email, encodedQR)
 
-        CoroutineScope(Dispatchers.IO).launch {
+        runInCoroutineScope(Dispatchers.IO) {
             try {
                 val request = service.handleQR(requestData)
 
@@ -164,7 +163,7 @@ class HandleAPI(private val context: Context) {
                             val authResponse =
                                 Gson().fromJson(responseBodyString, AuthQRResponse::class.java)
 
-                            CoroutineScope(Dispatchers.Main).launch {
+                            runInCoroutineScope(Dispatchers.Main) {
                                 Toast.makeText(
                                     context,
                                     if (authResponse.success) authResponse.message else "Error: ${authResponse.message}",
@@ -177,7 +176,7 @@ class HandleAPI(private val context: Context) {
                             val authResponse =
                                 Gson().fromJson(errorBodyString, AuthQRResponse::class.java)
 
-                            CoroutineScope(Dispatchers.Main).launch {
+                            runInCoroutineScope(Dispatchers.Main) {
                                 Toast.makeText(
                                     context,
                                     "${response.code()} Error:${authResponse.message}",
@@ -188,7 +187,7 @@ class HandleAPI(private val context: Context) {
                     }
 
                     override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                        CoroutineScope(Dispatchers.Main).launch {
+                        runInCoroutineScope(Dispatchers.Main) {
                             Toast.makeText(
                                 context, "Error: ${t.message}", Toast.LENGTH_LONG
                             ).show()
@@ -196,7 +195,7 @@ class HandleAPI(private val context: Context) {
                     }
                 })
             } catch (e: Exception) {
-                CoroutineScope(Dispatchers.Main).launch {
+                runInCoroutineScope(Dispatchers.Main) {
                     Toast.makeText(
                         context, "Auth failed: ${e.message}", Toast.LENGTH_LONG
                     ).show()

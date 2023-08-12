@@ -43,6 +43,12 @@
             android:name=".view.MainActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
+        <activity
+            android:name=".view.FloatingActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/TransparentTheme" />
+
     </application>
 
 </manifest>
