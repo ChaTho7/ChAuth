@@ -47,9 +47,9 @@ class FloatingActivity : AppCompatActivity() {
         handleAPI = HandleAPI(this)
         handleBiometric = HandleBiometric(this, handleAPI)
 
-        mapView = binding.mapViewDummyActivity
+        mapView = binding.mapViewFloatingActivity
         mapBoxMap = mapView.getMapboxMap()
-        popUpView = binding.popupViewDummyActivity
+        popUpView = binding.popupViewFloatingActivity
 
         if (OneSignalHolder.isAllowed == null) {
             if (OneSignalHolder.clientIpAddress != null) {
@@ -110,29 +110,29 @@ class FloatingActivity : AppCompatActivity() {
     private fun setupPopUp(
         response: IPLocationResponse?, cameraOptions: CameraOptions?
     ) {
-        binding.ipAddressTextDummyActivity.text =
+        binding.ipAddressTextFloatingActivity.text =
             "(${OneSignalHolder.clientIpAddress})".takeIf { OneSignalHolder.clientIpAddress != null }
                 ?: "(Unknown IP Address)"
         if (response != null) {
-            binding.ipLocationTextDummyActivity.text =
+            binding.ipLocationTextFloatingActivity.text =
                 "${response.city}, ${response.regionName}, ${response.country}, ${response.continent}\n${response.isp}"
-            binding.ipGeoLocationTextDummyActivity.text =
+            binding.ipGeoLocationTextFloatingActivity.text =
                 "Lon: ${response.lon} / Lat: ${response.lat}"
         } else {
-            binding.ipLocationTextDummyActivity.text =
+            binding.ipLocationTextFloatingActivity.text =
                 resources.getString(R.string.unknown_ip_location)
-            binding.ipGeoLocationTextDummyActivity.text =
+            binding.ipGeoLocationTextFloatingActivity.text =
                 resources.getString(R.string.unknown_geo_location)
         }
 
         handleAnimations(cameraOptions)
 
-        binding.allowActionButtonDummyActivity.setOnClickListener {
+        binding.allowActionButtonFloatingActivity.setOnClickListener {
             popUpView.startAnimation(popIn)
             OneSignalHolder.isAllowed = true
             handleBiometric.biometricSetup(true)
         }
-        binding.denyActionButtonDummyActivity.setOnClickListener {
+        binding.denyActionButtonFloatingActivity.setOnClickListener {
             popUpView.startAnimation(popIn)
             OneSignalHolder.isAllowed = false
             handleAPI.handleNotify("test@test2.com", false)
@@ -169,7 +169,7 @@ class FloatingActivity : AppCompatActivity() {
 
             override fun onAnimationEnd(p0: Animation?) {
                 popUpView.visibility = View.GONE
-                binding.ipAddressTextDummyActivity.text = ""
+                binding.ipAddressTextFloatingActivity.text = ""
                 mapBoxMap.setCamera(cameraOptions {
                     center(Point.fromLngLat(35.2, 38.9))
                     zoom(3.0)

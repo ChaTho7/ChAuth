@@ -7,11 +7,12 @@
     android:background="@color/dark_grey_alpha_80">
 
     <androidx.cardview.widget.CardView
-        android:id="@+id/popup_view_dummy_activity"
+        android:id="@+id/popup_view_floating_activity"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="60dp"
         android:elevation="3dp"
+        android:visibility="gone"
         app:cardBackgroundColor="@android:color/transparent"
         app:cardCornerRadius="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -30,7 +31,7 @@
             app:layout_constraintVertical_bias="0.5">
 
             <ImageView
-                android:id="@+id/login_icon_dummy_activity"
+                android:id="@+id/login_icon_floating_activity"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_marginVertical="12dp"
@@ -41,7 +42,7 @@
                 app:srcCompat="@drawable/login_icon" />
 
             <TextView
-                android:id="@+id/textView_dummy_activity"
+                android:id="@+id/textView_floating_activity"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
@@ -51,10 +52,10 @@
                 android:textSize="20sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/login_icon_dummy_activity" />
+                app:layout_constraintTop_toBottomOf="@+id/login_icon_floating_activity" />
 
             <TextView
-                android:id="@+id/ip_address_text_dummy_activity"
+                android:id="@+id/ip_address_text_floating_activity"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -65,10 +66,10 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView_dummy_activity" />
+                app:layout_constraintTop_toBottomOf="@+id/textView_floating_activity" />
 
             <TextView
-                android:id="@+id/ip_location_text_dummy_activity"
+                android:id="@+id/ip_location_text_floating_activity"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
@@ -79,10 +80,10 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/ip_address_text_dummy_activity" />
+                app:layout_constraintTop_toBottomOf="@+id/ip_address_text_floating_activity" />
 
             <TextView
-                android:id="@+id/ip_geo_location_text_dummy_activity"
+                android:id="@+id/ip_geo_location_text_floating_activity"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
@@ -93,10 +94,10 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/ip_location_text_dummy_activity" />
+                app:layout_constraintTop_toBottomOf="@+id/ip_location_text_floating_activity" />
 
             <com.mapbox.maps.MapView
-                android:id="@+id/mapView_dummy_activity"
+                android:id="@+id/mapView_floating_activity"
                 android:layout_width="0dp"
                 android:layout_height="100dp"
                 android:layout_marginHorizontal="40dp"
@@ -104,18 +105,18 @@
                 android:clickable="false"
                 android:contextClickable="false"
                 android:longClickable="false"
-                app:layout_constraintBottom_toTopOf="@+id/allow_action_button_dummy_activity"
+                app:layout_constraintBottom_toTopOf="@+id/allow_action_button_floating_activity"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/ip_geo_location_text_dummy_activity"
+                app:layout_constraintTop_toBottomOf="@+id/ip_geo_location_text_floating_activity"
                 app:layout_constraintVertical_bias="0.5"
                 app:mapbox_cameraTargetLat="38.9"
                 app:mapbox_cameraTargetLng="35.2"
                 app:mapbox_cameraZoom="3.0" />
 
             <Button
-                android:id="@+id/allow_action_button_dummy_activity"
+                android:id="@+id/allow_action_button_floating_activity"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="140dp"
@@ -127,10 +128,10 @@
                 app:cornerRadius="10dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/ip_geo_location_text_dummy_activity" />
+                app:layout_constraintTop_toBottomOf="@+id/ip_geo_location_text_floating_activity" />
 
             <Button
-                android:id="@+id/deny_action_button_dummy_activity"
+                android:id="@+id/deny_action_button_floating_activity"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="40dp"
@@ -142,7 +143,7 @@
                 app:cornerRadius="10dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/ip_geo_location_text_dummy_activity" />
+                app:layout_constraintTop_toBottomOf="@+id/ip_geo_location_text_floating_activity" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.cardview.widget.CardView>
